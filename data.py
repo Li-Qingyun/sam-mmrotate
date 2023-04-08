@@ -79,8 +79,8 @@ naive_trainval_dataset = dict(
     # ann_file='trainval/annfiles-3sample/',
     # ann_file='trainval/annfiles-10sample/',
     # ann_file='trainval/annfiles-30sample/',
-    ann_file='trainval/annfiles-100sample/',
-    # ann_file='trainval/annfiles-1000sample/',
+    # ann_file='trainval/annfiles-100sample/',
+    ann_file='trainval/annfiles-1000sample/',
     data_prefix=dict(img_path='trainval/images/'),
     test_mode=True,  # we only inference the sam
     pipeline=naive_trainval_pipeline)

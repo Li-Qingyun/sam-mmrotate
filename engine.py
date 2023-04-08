@@ -15,6 +15,10 @@ from mmengine.structures import InstanceData
 from data import build_visualizer
 
 
+RESULT_WITH_MASK = True
+MAX_BATCH_NUM_PRED = 50
+
+
 @torch.no_grad()
 def single_sample_step(i, data, model, predictor, evaluator, dataloader, device, SHOW):
     copied_data = deepcopy(data)  # for sam
@@ -32,11 +36,11 @@ def single_sample_step(i, data, model, predictor, evaluator, dataloader, device,
     scores = pred_results[0].pred_instances.scores
 
     # Stage 2
-    r_bboxes = []
     if len(h_bboxes) == 0:
         qualities = h_bboxes[:, 0]
         masks = h_bboxes.new_tensor((0, *data['inputs'][0].shape[:2]))
         data_samples = data['data_samples']
+        r_bboxes = []
     else:
         img = copied_data['inputs'][0].permute(1, 2, 0).numpy()[:, :, ::-1]
         data_samples = copied_data['data_samples']
@@ -45,34 +49,29 @@ def single_sample_step(i, data, model, predictor, evaluator, dataloader, device,
 
         predictor.set_image(img)
 
-        if len(h_bboxes) <= 50:
-            transformed_boxes = predictor.transform.apply_boxes_torch(h_bboxes, img.shape[:2])
-            masks, qualities, lr_logits = predictor.predict_torch(
+        # Too many predictions may result in OOM, hence,
+        # we process the predictions in multiple batches.
+        masks = []
+        num_pred = len(h_bboxes)
+        num_batches = int(np.ceil(num_pred / MAX_BATCH_NUM_PRED))
+        for i in range(num_batches):
+            left_index = i * MAX_BATCH_NUM_PRED
+            right_index = (i + 1) * MAX_BATCH_NUM_PRED
+            if i == num_batches - 1:
+                batch_boxes = h_bboxes[left_index:]
+            else:
+                batch_boxes = h_bboxes[left_index: right_index]
+
+            transformed_boxes = predictor.transform.apply_boxes_torch(batch_boxes, img.shape[:2])
+            batch_masks, qualities, lr_logits = predictor.predict_torch(
                 point_coords=None,
                 point_labels=None,
                 boxes=transformed_boxes,
                 multimask_output=False)
-            masks = masks.squeeze(1)
-            qualities = qualities.squeeze(-1)
-            for mask in masks:
-                r_bboxes.append(mask2rbox(mask.cpu().numpy()))
-        else:
-            masks = []
-            for h_bbox in h_bboxes:
-                one_box = h_bbox.unsqueeze(0)
-                transformed_boxes = predictor.transform.apply_boxes_torch(
-                    one_box, img.shape[:2])
-                one_mask, qualities, lr_logits = predictor.predict_torch(
-                    point_coords=None,
-                    point_labels=None,
-                    boxes=transformed_boxes,
-                    multimask_output=False)
-                one_mask = one_mask.squeeze(1)
-                qualities = qualities.squeeze(-1)
-                masks.append(one_mask.squeeze(0))
-            masks = torch.stack(masks, dim=0).cpu()
-            for mask in masks:
-                r_bboxes.append(mask2rbox(mask.numpy()))
+            batch_masks = batch_masks.squeeze(1).cpu()
+            masks.extend([*batch_masks])
+        masks = torch.stack(masks, dim=0)
+        r_bboxes = [mask2rbox(mask.numpy()) for mask in masks]
 
     results_list = get_instancedata_resultlist(r_bboxes, labels, masks, scores)
     data_samples = add_pred_to_datasample(results_list, data_samples)
@@ -134,6 +133,7 @@ def get_instancedata_resultlist(r_bboxes, labels, masks, scores):
     # results.scores = qualities
     results.scores = scores
     results.labels = labels
-    results.masks = masks.cpu().numpy()
+    if RESULT_WITH_MASK:
+        results.masks = masks.cpu().numpy()
     results_list = [results]
     return results_list
