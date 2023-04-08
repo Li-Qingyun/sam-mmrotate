@@ -44,18 +44,37 @@ def single_sample_step(i, data, model, predictor, evaluator, dataloader, device,
         data_sample = data_sample.to(device=device)
 
         predictor.set_image(img)
-        transformed_boxes = predictor.transform.apply_boxes_torch(h_bboxes, img.shape[:2])
-        masks, qualities, lr_logits = predictor.predict_torch(
-            point_coords=None,
-            point_labels=None,
-            boxes=transformed_boxes,
-            multimask_output=False)
-        masks = masks.squeeze(1)
-        qualities = qualities.squeeze(-1)
-        for mask in masks:
-            r_bboxes.append(mask2rbox(mask.cpu().numpy()))
 
-    results_list = get_instancedata_resultlist(r_bboxes, qualities, labels, masks)
+        if len(h_bboxes) <= 50:
+            transformed_boxes = predictor.transform.apply_boxes_torch(h_bboxes, img.shape[:2])
+            masks, qualities, lr_logits = predictor.predict_torch(
+                point_coords=None,
+                point_labels=None,
+                boxes=transformed_boxes,
+                multimask_output=False)
+            masks = masks.squeeze(1)
+            qualities = qualities.squeeze(-1)
+            for mask in masks:
+                r_bboxes.append(mask2rbox(mask.cpu().numpy()))
+        else:
+            masks = []
+            for h_bbox in h_bboxes:
+                one_box = h_bbox.unsqueeze(0)
+                transformed_boxes = predictor.transform.apply_boxes_torch(
+                    one_box, img.shape[:2])
+                one_mask, qualities, lr_logits = predictor.predict_torch(
+                    point_coords=None,
+                    point_labels=None,
+                    boxes=transformed_boxes,
+                    multimask_output=False)
+                one_mask = one_mask.squeeze(1)
+                qualities = qualities.squeeze(-1)
+                masks.append(one_mask.squeeze(0))
+            masks = torch.stack(masks, dim=0).cpu()
+            for mask in masks:
+                r_bboxes.append(mask2rbox(mask.numpy()))
+
+    results_list = get_instancedata_resultlist(r_bboxes, labels, masks, scores)
     data_samples = add_pred_to_datasample(results_list, data_samples)
 
     evaluator.process(data_samples=data_samples, data_batch=data)
@@ -109,10 +128,11 @@ def add_pred_to_datasample(results_list, data_samples):
     return data_samples
 
 
-def get_instancedata_resultlist(r_bboxes, qualities, labels, masks):
+def get_instancedata_resultlist(r_bboxes, labels, masks, scores):
     results = InstanceData()
     results.bboxes = RotatedBoxes(r_bboxes)
-    results.scores = qualities
+    # results.scores = qualities
+    results.scores = scores
     results.labels = labels
     results.masks = masks.cpu().numpy()
     results_list = [results]

@@ -16,7 +16,7 @@ from mmdet.models.utils import samplelist_boxtype2tensor
 
 register_all_modules(init_default_scope=True)
 
-SHOW = True
+SHOW = False
 FORMAT_ONLY = False
 MERGE_PATCHES = False
 
