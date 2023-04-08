@@ -1,5 +1,4 @@
 import torch
-import transforms
 from tqdm import tqdm
 
 from mmrotate.utils import register_all_modules
@@ -16,9 +15,9 @@ from engine import single_sample_step
 
 register_all_modules(init_default_scope=True)
 
-SHOW = False
-FORMAT_ONLY = False
-MERGE_PATCHES = False  # TODO: What is this ??
+SHOW = True
+FORMAT_ONLY = True
+MERGE_PATCHES = True
 SET_MIN_BOX = False
 
 
@@ -43,8 +42,8 @@ if __name__ == '__main__':
     sd = checkpoint.get('state_dict', checkpoint)
     print(model.load_state_dict(sd))
 
-    # dataloader = build_data_loader('test_without_hbox')
-    dataloader = build_data_loader('trainval_with_hbox')
+    dataloader = build_data_loader('test_without_hbox')
+    # dataloader = build_data_loader('trainval_with_hbox')
     evaluator = build_evaluator(MERGE_PATCHES, FORMAT_ONLY)
     evaluator.dataset_meta = dataloader.dataset.metainfo
 
@@ -60,5 +59,6 @@ if __name__ == '__main__':
 
         evaluator = single_sample_step(i, data, model, predictor, evaluator, dataloader, device, SHOW)
 
-    metrics = evaluator.evaluate(len(dataloader.dataset))
+    torch.save(evaluator, './evaluator.pth')
 
+    metrics = evaluator.evaluate(len(dataloader.dataset))

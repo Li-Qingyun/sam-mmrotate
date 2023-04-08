@@ -12,6 +12,9 @@ from mmengine.registry import DATA_SAMPLERS, FUNCTIONS, EVALUATOR, VISUALIZERS
 from mmengine.utils import digit_version
 from mmengine.utils.dl_utils import TORCH_VERSION
 
+import transforms
+import visualizer
+
 
 from torch.utils.data import DataLoader
 
@@ -36,7 +39,7 @@ def build_evaluator(merge_patches=True, format_only=False):
 def build_visualizer():
     vis_backends = [dict(type='LocalVisBackend')]
     visualizer = dict(
-        type='RotLocalVisualizer', vis_backends=vis_backends,
+        type='RotLocalVisualizerMaskThenBox', vis_backends=vis_backends,
         name='sammrotate', save_dir='./rbbox_vis')
     return VISUALIZERS.build(visualizer)
 

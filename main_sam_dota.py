@@ -1,5 +1,4 @@
 import torch
-import transforms
 from tqdm import tqdm
 import numpy as np
 import cv2
@@ -30,7 +29,7 @@ if __name__ == '__main__':
 
     sam_checkpoint = r"../segment-anything/checkpoints/sam_vit_b_01ec64.pth"
     model_type = "vit_b"
-    device = "cpu"
+    device = "cuda"
 
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 
@@ -45,8 +44,8 @@ if __name__ == '__main__':
         data_sample = data_samples[0]
         data_sample = data_sample.to(device=device)
 
-        h_bboxes = data_sample.h_gt_bboxes.tensor
-        labels = data_sample.gt_instances.labels
+        h_bboxes = data_sample.h_gt_bboxes.tensor.to(device=device)
+        labels = data_sample.gt_instances.labels.to(device=device)
 
         r_bboxes = []
         if len(h_bboxes) == 0:

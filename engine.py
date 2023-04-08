@@ -16,11 +16,12 @@ from data import build_visualizer
 
 
 RESULT_WITH_MASK = True
-MAX_BATCH_NUM_PRED = 50
+MAX_BATCH_NUM_PRED = 100
+VIS_SCORE_THR = 0.3
 
 
 @torch.no_grad()
-def single_sample_step(i, data, model, predictor, evaluator, dataloader, device, SHOW):
+def single_sample_step(img_id, data, model, predictor, evaluator, dataloader, device, SHOW):
     copied_data = deepcopy(data)  # for sam
     for item in data.values():
         item[0].to(device)
@@ -79,8 +80,9 @@ def single_sample_step(i, data, model, predictor, evaluator, dataloader, device,
     evaluator.process(data_samples=data_samples, data_batch=data)
 
     if SHOW:
-        if len(h_bboxes) != 0:
-            show_results(img, masks, h_bboxes, results_list, i, dataloader)
+        if len(h_bboxes) != 0 and img_id < 100:
+            img_name = data_samples[0].img_id
+            show_results(img, masks, h_bboxes, results_list, img_id, img_name, dataloader)
 
     return evaluator
 
@@ -92,31 +94,38 @@ def mask2rbox(mask):
     r_bbox = np.array([cx, cy, w, h, a / 180 * np.pi])
     return r_bbox
 
-def show_results(img, masks, h_bboxes, results_list, i, dataloader):
+def show_results(img, masks, h_bboxes, results_list, i, img_name, dataloader):
     output_dir = './output_vis/'
     Path(output_dir).mkdir(exist_ok=True, parents=True)
 
     results = results_list[0]
-    plt.figure(figsize=(10, 10))
-    plt.imshow(img)
-    for mask in masks:
-        show_mask(mask.cpu().numpy(), plt.gca(), random_color=True)
-    for box in h_bboxes:
-        show_box(box.cpu().numpy(), plt.gca())
-    plt.axis('off')
-    # plt.show()
-    plt.savefig(f'./out_mask_{i}.png')
-    plt.close()
+
+    # vis first stage
+    # plt.figure(figsize=(10, 10))
+    # plt.imshow(img)
+    # for mask in masks:
+    #     show_mask(mask.cpu().numpy(), plt.gca(), random_color=True)
+    # for box in h_bboxes:
+    #     show_box(box.cpu().numpy(), plt.gca())
+    # plt.axis('off')
+    # # plt.show()
+    # plt.savefig(f'./out_mask_{i}.png')
+    # plt.close()
 
     # draw rbox with mmrotate
     visualizer = build_visualizer()
     visualizer.dataset_meta = dataloader.dataset.metainfo
+
+    scores = results.scores
+    keep_results = results[scores >= VIS_SCORE_THR]
     out_img = visualizer._draw_instances(
-        img, results,
+        img, keep_results,
         dataloader.dataset.metainfo['classes'],
-        dataloader.dataset.metainfo['palette'])
+        dataloader.dataset.metainfo['palette'],
+        box_alpha=0.9, mask_alpha=0.3)
     # visualizer.show()
-    cv2.imwrite(os.path.join(output_dir, f'out_rbox_{i}.png'),
+    # cv2.imwrite(os.path.join(output_dir, f'out_rbox_{i}.png'), out_img[:, :, ::-1])
+    cv2.imwrite(os.path.join(output_dir, f'rdet-sam_{img_name}.png'),
                 out_img[:, :, ::-1])
 
 
