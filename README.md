@@ -46,3 +46,9 @@ pip install opencv-python pycocotools matplotlib onnxruntime onnx
   year={2023}
 }
 ```
+
+### Other awesome SAM projects:
+- [Grounded-Segment-Anything](https://github.com/IDEA-Research/Grounded-Segment-Anything)
+- [Zero-Shot Anomaly Detection](https://github.com/caoyunkang/GroundedSAM-zero-shot-anomaly-detection)
+- [EditAnything: ControlNet + StableDiffusion based on the SAM segmentation mask](https://github.com/sail-sg/EditAnything)
+- [IEA: Image Editing Anything](https://github.com/feizc/IEA)
