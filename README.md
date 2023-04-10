@@ -52,3 +52,6 @@ pip install opencv-python pycocotools matplotlib onnxruntime onnx
 - [Zero-Shot Anomaly Detection](https://github.com/caoyunkang/GroundedSAM-zero-shot-anomaly-detection)
 - [EditAnything: ControlNet + StableDiffusion based on the SAM segmentation mask](https://github.com/sail-sg/EditAnything)
 - [IEA: Image Editing Anything](https://github.com/feizc/IEA)
+- [sam-with-mmdet](https://github.com/liuyanyi/sam-with-mmdet) (mmdet 3.0.0, provide RTMDet)
+- [Prompt-Segment-Anything](https://github.com/RockeyCoss/Prompt-Segment-Anything) (mmdet 3.0.0, H-DETR, DINO, Focal backbone)
+......
