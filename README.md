@@ -36,6 +36,13 @@ pip install opencv-python pycocotools matplotlib onnxruntime onnx
 
 ## Citation
 ```
+@article{yu2023h2rbox,
+  title={H2RBox-v2: Boosting HBox-supervised Oriented Object Detection via Symmetric Learning},
+  author={Yu, Yi and Yang, Xue and Li, Qingyun and Zhou, Yue and Zhang, Gefan and Yan, Junchi and Da, Feipeng},
+  journal={arXiv preprint arXiv:2304.04403},
+  year={2023}
+}
+
 @inproceedings{yang2023h2rbox,
   title={H2RBox: Horizontal Box Annotation is All You Need for Oriented Object Detection},
   author={Yang, Xue and Zhang, Gefan and Li, Wentong and Wang, Xuehui and Zhou, Yue and Yan, Junchi},
