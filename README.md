@@ -1,6 +1,8 @@
 # SAM-RBox 
 This is an implementation of [SAM (Segment Anything Model)](https://github.com/facebookresearch/segment-anything) for generating rotated bounding boxes with [MMRotate](https://github.com/open-mmlab/mmrotate), which is a comparison method of [H2RBox-v2: Boosting HBox-supervised Oriented Object Detection via Symmetric Learning](https://arxiv.org/abs/2304.04403).
 
+**NOTE:** This project has been involved into OpenMMLab's new repo [**_PlayGround_**](https://github.com/open-mmlab/playground). For more details, please refer to [this](https://github.com/open-mmlab/playground/blob/main/mmrotate_sam/README.md).
+
 <div align=center>
 <img src="https://user-images.githubusercontent.com/79644233/231636420-8b7f81f3-51d2-439c-87cc-6f7eebd32193.png"/>
 </div>
